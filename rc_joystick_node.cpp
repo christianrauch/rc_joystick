@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <cstring>
 
 #include <thread>
 #include <mutex>
