@@ -142,7 +142,7 @@ public:
                         // map [min,max] to [1000,2000]
                         msg->channels[ev.code] = rcmin + ((axval-axmin[ev.code])*(rcmax-rcmin)) / (axmax[ev.code]-axmin[ev.code]);
                         msg_mutex.unlock();
-                        pub_rc->publish(msg);
+                        pub_rc->publish(*msg);
                     }
                 }
                 else if(rc==LIBEVDEV_READ_STATUS_SYNC) {
@@ -167,7 +167,7 @@ public:
             int axval = libevdev_get_event_value(dev, EV_ABS, iaxis);
             msg->channels[iaxis] = rcmin + ((axval-axmin[iaxis])*(rcmax-rcmin)) / (axmax[iaxis]-axmin[iaxis]);
         }
-        pub_rc->publish(msg);
+        pub_rc->publish(*msg);
         msg_mutex.unlock();
     }
 
