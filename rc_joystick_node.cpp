@@ -41,6 +41,8 @@ public:
         Node("rc_joystick"),
         pub_rc(create_publisher<mavros_msgs::msg::OverrideRCIn>("rc/override/raw", 1))
     {
+        declare_parameter("device");
+
         if(!connect()) {
             RCLCPP_ERROR(get_logger(), "could not connect to any joystick");
             rclcpp::shutdown();
