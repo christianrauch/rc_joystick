@@ -83,7 +83,7 @@ public:
         else {
             if(evdevs.count(device)==0) {
                 // no such evdev device
-                RCLCPP_ERROR(get_logger(), "device %s is not an event device", device);
+                RCLCPP_ERROR(get_logger(), "device %s is not an event device", device.c_str());
                 std::cout << "Available devices:" << std::endl;
                 for(const auto &p : evdevs) {
                     std::cout << p.second << " (" << p.first << ")" << std::endl;
