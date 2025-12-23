@@ -164,8 +164,13 @@ public:
     void loop() {
         msg_mutex.lock();
         for(uint iaxis(0); iaxis<msg->channels.size(); iaxis++) {
-            int axval = libevdev_get_event_value(dev, EV_ABS, iaxis);
-            msg->channels[iaxis] = rcmin + ((axval-axmin[iaxis])*(rcmax-rcmin)) / (axmax[iaxis]-axmin[iaxis]);
+            const int axval = libevdev_get_event_value(dev, EV_ABS, iaxis);
+            if (axmax[iaxis] == axmin[iaxis]) {
+                msg->channels[iaxis] = axval;
+            }
+            else {
+                msg->channels[iaxis] = rcmin + ((axval-axmin[iaxis])*(rcmax-rcmin)) / (axmax[iaxis]-axmin[iaxis]);
+            }
         }
         pub_rc->publish(*msg);
         msg_mutex.unlock();
