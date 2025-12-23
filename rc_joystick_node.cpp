@@ -23,6 +23,8 @@ private:
     static const uint16_t rcmin;
     static const uint16_t rcmax;
 
+    std::string device;
+
     rclcpp::Publisher<mavros_msgs::msg::OverrideRCIn>::SharedPtr pub_rc;
     rclcpp::TimerBase::SharedPtr timer;
 
@@ -41,7 +43,7 @@ public:
         Node("rc_joystick"),
         pub_rc(create_publisher<mavros_msgs::msg::OverrideRCIn>("rc/override/raw", 1))
     {
-        declare_parameter("device", "/dev/input/js0");
+        device = declare_parameter("device", "");
 
         if(!connect()) {
             RCLCPP_ERROR(get_logger(), "could not connect to any joystick");
@@ -71,11 +73,6 @@ public:
         }
 
         // read parameters
-        std::string device;
-        if(!get_parameter("device", device)) {
-            RCLCPP_WARN(get_logger(), "parameter 'device' is not set");
-        }
-
         if(device.empty()) {
             // use first available device
             device = evdevs.begin()->first;
@@ -98,7 +95,7 @@ public:
             close(fd);
             return false;
         }
-        RCLCPP_INFO(get_logger(), "device: %s", libevdev_get_name(dev));
+        RCLCPP_INFO(get_logger(), "device: '%s' (%s)", libevdev_get_name(dev), device.c_str());
         RCLCPP_INFO(get_logger(), "firmware: %i", libevdev_get_id_version(dev));
 
         // check if device is joystick
