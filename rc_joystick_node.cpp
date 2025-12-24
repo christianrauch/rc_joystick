@@ -33,7 +33,7 @@ private:
 
     std::vector<int> axmin, axmax;
 
-    mavros_msgs::msg::OverrideRCIn::SharedPtr msg;
+    mavros_msgs::msg::OverrideRCIn msg;
 
     std::thread ev_block_thread;
     std::mutex msg_mutex;
@@ -49,8 +49,6 @@ public:
             RCLCPP_ERROR(get_logger(), "could not connect to any joystick");
             rclcpp::shutdown();
         }
-
-        msg = std::make_shared<mavros_msgs::msg::OverrideRCIn>();
 
         // start event thread
         start();
@@ -140,9 +138,9 @@ public:
                         int axval = ev.value;
                         msg_mutex.lock();
                         // map [min,max] to [1000,2000]
-                        msg->channels[ev.code] = rcmin + ((axval-axmin[ev.code])*(rcmax-rcmin)) / (axmax[ev.code]-axmin[ev.code]);
+                        msg.channels[ev.code] = rcmin + ((axval-axmin[ev.code])*(rcmax-rcmin)) / (axmax[ev.code]-axmin[ev.code]);
+                        pub_rc->publish(msg);
                         msg_mutex.unlock();
-                        pub_rc->publish(*msg);
                     }
                 }
                 else if(rc==LIBEVDEV_READ_STATUS_SYNC) {
@@ -166,13 +164,13 @@ public:
         for(uint iaxis(0); iaxis<msg->channels.size(); iaxis++) {
             const int axval = libevdev_get_event_value(dev, EV_ABS, iaxis);
             if (axmax[iaxis] == axmin[iaxis]) {
-                msg->channels[iaxis] = axval;
+                msg.channels[iaxis] = axval;
             }
             else {
-                msg->channels[iaxis] = rcmin + ((axval-axmin[iaxis])*(rcmax-rcmin)) / (axmax[iaxis]-axmin[iaxis]);
+                msg.channels[iaxis] = rcmin + ((axval-axmin[iaxis])*(rcmax-rcmin)) / (axmax[iaxis]-axmin[iaxis]);
             }
         }
-        pub_rc->publish(*msg);
+        pub_rc->publish(msg);
         msg_mutex.unlock();
     }
 
