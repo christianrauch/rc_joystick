@@ -31,7 +31,8 @@ private:
     int fd;
     struct libevdev *dev = NULL;
 
-    std::vector<int> axmin, axmax;
+    std::vector<uint> valid_evcodes;
+    std::array<int, ABS_MAX> axmin, axmax;
 
     mavros_msgs::msg::OverrideRCIn msg;
 
@@ -104,19 +105,18 @@ public:
             return false;
         }
 
-        const int max_evcode = libevdev_event_type_get_max(EV_ABS);
-        if(max_evcode<0) {
-            RCLCPP_ERROR(get_logger(), "invalid type");
-            libevdev_free(dev);
-            close(fd);
-            return false;
-        }
-
         // get minimum and maximum value ranges
-        for (uint icode(0); icode < uint(max_evcode); icode++) {
+        for (uint icode(0); icode < ABS_MAX; icode++) {
             if(libevdev_has_event_code(dev, EV_ABS, icode)) {
-                axmin.push_back(libevdev_get_abs_minimum(dev, icode));
-                axmax.push_back(libevdev_get_abs_maximum(dev, icode));
+                valid_evcodes.push_back(icode);
+                const int vmin = libevdev_get_abs_minimum(dev, icode);
+                const int vmax = libevdev_get_abs_maximum(dev, icode);
+                axmin[icode] = vmin;
+                axmax[icode] = vmax;
+                RCLCPP_INFO(get_logger(), "%s: min=%i max=%i", libevdev_event_code_get_name(EV_ABS, icode), vmin, vmax);
+                if (icode >= msg.channels.max_size()) {
+                    RCLCPP_WARN_STREAM(get_logger(), "event code " << icode << " exceeds max channels " << msg.channels.max_size());
+                }
             }
         }
 
@@ -135,7 +135,7 @@ public:
                 int rc = libevdev_next_event(dev, LIBEVDEV_READ_FLAG_BLOCKING, &ev);
                 if(rclcpp::ok() && rc==LIBEVDEV_READ_STATUS_SUCCESS) {
                     if(ev.type==EV_ABS) {
-                        int axval = ev.value;
+                        const int32_t axval = ev.value;
                         msg_mutex.lock();
                         // map [min,max] to [1000,2000]
                         msg.channels[ev.code] = rcmin + ((axval-axmin[ev.code])*(rcmax-rcmin)) / (axmax[ev.code]-axmin[ev.code]);
@@ -161,7 +161,7 @@ public:
     // periodically check axis events
     void loop() {
         msg_mutex.lock();
-        for(uint iaxis(0); iaxis<msg->channels.size(); iaxis++) {
+        for (const uint &iaxis : valid_evcodes) {
             const int axval = libevdev_get_event_value(dev, EV_ABS, iaxis);
             if (axmax[iaxis] == axmin[iaxis]) {
                 msg.channels[iaxis] = axval;
