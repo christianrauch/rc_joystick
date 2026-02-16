@@ -20,8 +20,8 @@ private:
     static const std::string event_dir;
     static const std::string event_file;
 
-    static const uint16_t rcmin;
-    static const uint16_t rcmax;
+    static constexpr uint16_t rcmin = 1000;
+    static constexpr uint16_t rcmax = 2000;
 
     std::string device;
 
@@ -201,9 +201,6 @@ public:
 
 const std::string AxesEventReader::event_dir = "/dev/input";
 const std::string AxesEventReader::event_file = "event";
-
-const uint16_t AxesEventReader::rcmin = 1000;
-const uint16_t AxesEventReader::rcmax = 2000;
 
 
 int main(int argc, char **argv) {
