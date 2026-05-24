@@ -21,11 +21,11 @@ include_directories(${evdev_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME}_node rc_joystick_node.cpp)
 
-ament_target_dependencies(${PROJECT_NAME}_node
-  rclcpp
-  mavros_msgs
+target_link_libraries(${PROJECT_NAME}_node PUBLIC
+  ${evdev_LIBRARIES}
+  rclcpp::rclcpp
+  ${mavros_msgs_TARGETS}
 )
-target_link_libraries(${PROJECT_NAME}_node ${evdev_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}_node
     ARCHIVE DESTINATION lib
